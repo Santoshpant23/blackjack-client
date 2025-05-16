@@ -4,15 +4,14 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
 
-
 public class BlackjackClient {
     private static final String BASE_URL = "http://euclid.knox.edu:8080/api/blackjack";
-    private static final String USERNAME = "jspacco"; // replace with your username
-    private static final String PASSWORD = "12347"; // replace with your from the file posted to Classroom
+    private static final String USERNAME = "spant"; // replace with your username
+    private static final String PASSWORD = "2ec6db"; // replace with your from the file posted to Classroom
 
     public static void main(String[] args) throws Exception {
         ClientConnecter clientConnecter = new ClientConnecter(BASE_URL, USERNAME, PASSWORD);
-        
+
         Scanner input = new Scanner(System.in);
 
         System.out.println("Welcome to the Blackjack game!");
@@ -23,14 +22,15 @@ public class BlackjackClient {
         List<SessionSummary> sessions = clientConnecter.listSessions();
         int sessionNum = 1;
         for (SessionSummary session : sessions) {
-            System.out.println("session number: " + sessionNum + " with Session ID: " + session.sessionId + ", Balance: " + session.balance);
+            System.out.println("session number: " + sessionNum + " with Session ID: " + session.sessionId
+                    + ", Balance: " + session.balance);
             sessionNum++;
         }
         System.out.println("Enter session ID to connect to an old session or 'new' for a new session:");
         String sessionIdInput = input.nextLine().trim();
         UUID sessionId = null;
         GameState state = null;
-        
+
         if (sessionIdInput.equalsIgnoreCase("new")) {
             // Start a new session
             System.out.println("A new session! Great idea.");
@@ -45,6 +45,7 @@ public class BlackjackClient {
             }
         } else {
             try {
+                System.out.println(sessionIdInput);
                 sessionId = UUID.fromString(sessionIdInput);
                 System.out.println("Connecting to session ID: " + sessionId);
             } catch (IllegalArgumentException e) {
@@ -59,9 +60,8 @@ public class BlackjackClient {
             // Connect to an existing session
             System.out.println("Connecting to session ID: " + sessionId);
             state = clientConnecter.resumeSession(sessionId);
-            
+
         }
-        
 
         while (true) {
             System.out.println("\nYour balance: " + state.balance + " units");
@@ -117,14 +117,16 @@ public class BlackjackClient {
         input.close();
         clientConnecter.finishGame(state.sessionId);
 
-    }    
+    }
 
     private static void printState(GameState state) {
         // this is a stupid AI generated method
         try {
-            System.out.println("Your cards: " + String.join(", ", state.playerCards) + " (value: " + state.playerValue + ")");
+            System.out.println(
+                    "Your cards: " + String.join(", ", state.playerCards) + " (value: " + state.playerValue + ")");
             if (state.dealerValue != null) {
-                System.out.println("Dealer cards: " + String.join(", ", state.dealerCards) + " (value: " + state.dealerValue + ")");
+                System.out.println("Dealer cards: " + String.join(", ", state.dealerCards) + " (value: "
+                        + state.dealerValue + ")");
             } else {
                 System.out.println("Dealer shows: " + state.dealerCards.get(0));
             }
