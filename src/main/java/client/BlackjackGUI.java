@@ -175,10 +175,15 @@ public class BlackjackGUI extends JFrame {
     /* ------------------------------------------------------------ */
     private void startNewGame() {
         try {
+            clearState(); // Clear any existing state first
             currState = clientConnecter.startGame();
-            sessionId = currState.sessionId;
-            cardPanel.clearCards();
-            askForBet();
+            if (currState != null) {
+                sessionId = currState.sessionId;
+                cardPanel.clearCards();
+                askForBet();
+            } else {
+                showError("Failed to initialize game state");
+            }
         } catch (Exception e) {
             showError("Error starting new game: " + e.getMessage());
         }
@@ -241,7 +246,25 @@ public class BlackjackGUI extends JFrame {
                 int bet = Integer.parseInt(in);
                 if (bet <= 0 || bet % 10 != 0)
                     throw new NumberFormatException();
+
+                // Make sure we have a valid session before placing bet
+                System.out.println(
+                        "Session Id is: " + sessionId + " and let's see if currState is null " + (currState == null));
+                if (sessionId == null || currState == null) {
+                    showError("Invalid session state. Starting a new game.");
+                    startNewGame();
+                    return;
+                }
+
                 currState = clientConnecter.placeBet(sessionId, bet);
+
+                // Verify we got a valid state back
+                if (currState == null || currState.playerCards == null || currState.dealerCards == null) {
+                    showError("Received invalid game state. Starting a new game.");
+                    startNewGame();
+                    return;
+                }
+
                 displayInitialCards();
                 updateButtonStates();
                 updateScoreLabel();
@@ -250,13 +273,23 @@ public class BlackjackGUI extends JFrame {
                 JOptionPane.showMessageDialog(this, "Invalid bet. Enter a positive multiple of 10.");
             } catch (Exception ex) {
                 showError("Error placing bet: " + ex.getMessage());
-                break;
+                // Try to recover by starting a new game
+                startNewGame();
+                return;
             }
         }
     }
 
     private void displayInitialCards() {
         cardPanel.clearCards();
+
+        // Safety check to ensure we have valid card collections
+        if (currState == null || currState.playerCards == null || currState.dealerCards == null ||
+                currState.dealerCards.isEmpty()) {
+            showError("Invalid card state detected.");
+            return;
+        }
+
         for (String p : currState.playerCards)
             cardPanel.addPlayerCard(getCard(p));
         cardPanel.addDealerCard(getCard(currState.dealerCards.get(0))); // show only first dealer card
@@ -302,13 +335,29 @@ public class BlackjackGUI extends JFrame {
         if (again == JOptionPane.YES_OPTION) {
             try {
                 clearCards();
+                // Make sure we keep our session ID
                 // Save the current state before starting a new round
                 clientConnecter.finishGame(sessionId);
                 // Start a new round with the same session
-                currState = clientConnecter.newGame(sessionId);
-                askForBet();
+                System.out.println("Game is saved now trying to call the same game again down");
+                currState = clientConnecter.resumeSession(currState.sessionId);
+                // Make sure we still have the correct session ID
+                System.out.println("New game was called successfully");
+                sessionId = currState.sessionId;
+                // Check if we have a valid state before proceeding
+                // System.out.println(currState);
+                // System.out.println(currState.playerValue);
+                System.out.println(sessionId);
+                if (currState != null) {
+                    askForBet();
+                } else {
+                    showError("Invalid game state returned. Starting a new game instead.");
+                    startNewGame();
+                }
             } catch (Exception e) {
                 showError("Failed to start new round: " + e.getMessage());
+                // Try to recover by starting a new game
+                startNewGame();
             }
         } else {
             try {
