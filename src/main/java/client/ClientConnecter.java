@@ -48,12 +48,14 @@ public class ClientConnecter {
     }
 
     public void finishGame(UUID sessionId) throws Exception {
+        System.out.println("I should save the game now");
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/" + sessionId + "/finish" + params))
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
         client.send(request, BodyHandlers.ofString());
+        System.out.println("Game should be saved at this point");
     }
 
     public GameState startGame() throws Exception {

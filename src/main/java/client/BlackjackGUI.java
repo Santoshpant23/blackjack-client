@@ -301,23 +301,37 @@ public class BlackjackGUI extends JFrame {
         int again = JOptionPane.showConfirmDialog(this, "Play again?", "New Round", JOptionPane.YES_NO_OPTION);
         if (again == JOptionPane.YES_OPTION) {
             try {
+                clearCards();
+                // Save the current state before starting a new round
+                clientConnecter.finishGame(sessionId);
+                // Start a new round with the same session
                 currState = clientConnecter.newGame(sessionId);
                 askForBet();
             } catch (Exception e) {
                 showError("Failed to start new round: " + e.getMessage());
             }
         } else {
-            resetScoreLabel();
-            clearState();
-            repaint();
+            try {
+                // Make sure to save the game before clearing everything
+                clientConnecter.finishGame(sessionId);
+                resetScoreLabel();
+                clearState();
+                repaint();
+            } catch (Exception e) {
+                showError("Cannot Save: " + e.getMessage());
+                // Even if saving fails, we should still clear the UI
+                resetScoreLabel();
+                clearState();
+                repaint();
+            }
         }
-
     }
 
     private void updateButtonStates() {
         boolean active = sessionId != null && currState != null && !currState.gameOver;
-        hitButton.setEnabled(active && currState.canHit);
-        standButton.setEnabled(active && currState.canStand);
+        boolean canHit = active && currState != null && currState.canHit;
+        hitButton.setEnabled(canHit);
+        standButton.setEnabled(active && currState != null && currState.canStand);
     }
 
     private void clearState() {
@@ -340,6 +354,11 @@ public class BlackjackGUI extends JFrame {
         for (Card c : Card.values()) {
             cardImages.put(c, new ImageIcon(getClass().getResource("/assets/" + c.getFilename())));
         }
+    }
+
+    public void clearCards() {
+        cardPanel.clearCards();
+        updateScoreLabel();
     }
 
     /* ------------------------------------------------------------ */
