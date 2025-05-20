@@ -25,6 +25,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
+//TODO:
+// check buttons, reshuffle
 public class BlackjackGUI extends JFrame {
     private static final long serialVersionUID = 1L;
 
@@ -207,7 +209,7 @@ public class BlackjackGUI extends JFrame {
 
             final JList<String> list = new JList<>(model);
             JScrollPane pane = new JScrollPane(list);
-            final JDialog dlg = new JDialog(this, "Select Session", true);
+            final JDialog dlg = new JDialog(this, "Select Session(Double Click)", true);
             dlg.setSize(300, 200);
             dlg.add(pane);
             list.addMouseListener(new MouseAdapter() {
@@ -237,7 +239,7 @@ public class BlackjackGUI extends JFrame {
 
     private void askForBet() {
         while (true) {
-            String in = JOptionPane.showInputDialog(this, "Enter bet (multiple of 10):");
+            String in = JOptionPane.showInputDialog(this, "Enter bet (multiple of 10 and <=1000):");
             if (in == null) {
                 clearState();
                 return;
